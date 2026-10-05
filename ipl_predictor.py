@@ -23,9 +23,9 @@ df = pd.DataFrame(data)
 encoders = {}
 features = ['team1', 'team2', 'toss_winner', 'toss_decision', 'venue']
 
-teams = pd.concat([df['team1'], df['team2'], df['toss_winner']]).unique().tolist()
-venues = df['venue'].unique().tolist()
-decisions = df['toss_decision'].unique().tolist()
+teams = sorted(pd.concat([df['team1'], df['team2'], df['toss_winner']]).unique().tolist())
+venues = sorted(df['venue'].unique().tolist())
+decisions = sorted(df['toss_decision'].unique().tolist())
 
 for col in features:
     le = LabelEncoder()
@@ -51,8 +51,10 @@ clf.fit(X_train, y_train)
 col1, col2 = st.columns(2)
 with col1:
     team1 = st.selectbox("Select Team 1", teams, index=0)
+
+team2_options = [t for t in teams if t != team1]
 with col2:
-    team2 = st.selectbox("Select Team 2", [t for t in teams if t != team1], index=0)
+    team2 = st.selectbox("Select Team 2", team2_options, index=0)
 
 toss_winner = st.selectbox("Toss Winner", [team1, team2])
 toss_decision = st.selectbox("Toss Decision", decisions)
@@ -66,18 +68,26 @@ if st.button("Predict Match Winner"):
         'toss_decision_enc': encoders['toss_decision'].transform([toss_decision])[0],
         'venue_enc': encoders['venue'].transform([venue])[0],
     }])
-    
+
     probs = clf.predict_proba(sample)[0]
-    classes = target_encoder.classes_
-    
-    t1_prob = probs[list(classes).index(team1)] if team1 in classes else 0.0
-    t2_prob = probs[list(classes).index(team2)] if team2 in classes else 0.0
-    
-    if t1_prob >= t2_prob:
+    classes = list(target_encoder.classes_)
+
+    t1_prob = probs[classes.index(team1)] if team1 in classes else 0.0
+    t2_prob = probs[classes.index(team2)] if team2 in classes else 0.0
+
+    total_prob = t1_prob + t2_prob
+    if total_prob > 0:
+        win_pct1 = round((t1_prob / total_prob) * 100, 1)
+        win_pct2 = round((t2_prob / total_prob) * 100, 1)
+    else:
+        win_pct1 = 50.0
+        win_pct2 = 50.0
+
+    if win_pct1 >= win_pct2:
         winner = team1
-        win_pct = round((t1_prob / (t1_prob + t2_prob)) * 100, 1) if (t1_prob + t2_prob) > 0 else 50.0
+        chance = win_pct1
     else:
         winner = team2
-        win_pct = round((t2_prob / (t1_prob + t2_prob)) * 100, 1) if (t1_prob + t2_prob) > 0 else 50.0
-        
-    st.success(f"🏆 Predicted Winner: **{winner}** ({win_pct}% win chance)")
+        chance = win_pct2
+
+    st.success(f"🏆 Predicted Winner: **{winner}** ({chance}% win chance)")

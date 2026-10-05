@@ -22,5 +22,24 @@ An end-to-end Machine Learning and Exploratory Data Analysis (EDA) project desig
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/YuvrajSingh-18/ipl-match-predictor.git](https://github.com/YuvrajSingh-18/ipl-match-predictor.git)
+   git clone https://github.com/YuvrajSingh-18/ipl-match-predictor.git
    cd ipl-match-predictor
+   ```
+
+2. **Install required dependencies:**
+```bash
+pip install pandas scikit-learn
+```
+
+3. **Run the prediction model:**
+```bash
+python ipl_predictor.py
+```
+
+---
+
+## 📊 Sample Inference
+```python
+predict_match(team1='CSK', team2='MI', toss_winner='CSK', toss_decision='bat', venue='Chennai')
+# Output: Predicted Winner: CSK
+```
